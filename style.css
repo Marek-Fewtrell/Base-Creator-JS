@@ -1,0 +1,26 @@
+/*
+    style.css
+    Marek Fewtrell
+
+*/
+
+/* Contains basic styling */
+
+header {
+    text-align: center;
+    background-color: blue;
+}
+
+section {
+    width: 100%;
+    background-color: yellow;
+}
+
+footer {
+    text-align: center;
+    background-color: blue;
+}
+
+/*
+    Contains the specific styling.
+*/
