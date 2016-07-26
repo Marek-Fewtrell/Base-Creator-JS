@@ -24,3 +24,8 @@ footer {
 /*
     Contains the specific styling.
 */
+
+canvas {
+    margin: auto;
+    display: block;
+}
