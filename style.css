@@ -24,3 +24,19 @@ footer {
 /*
     Contains the specific styling.
 */
+
+canvas {
+    margin: auto;
+    display: block;
+}
+
+#gameSelector {
+    text-align: center;
+}
+
+#gameSelector button {
+    padding: .5em;
+    margin: .5em;
+    background-color: white;
+    border-color: black;
+}

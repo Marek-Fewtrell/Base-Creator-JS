@@ -1,20 +1,23 @@
 /*
 a canvas will be the display area to show the base.
-there will be a grid drawn onto the canvas to denote separate tiles to build on.
-each tile will be a section of the base.
-each tile can be:
+There will be a grid drawn onto the canvas to denote separate tiles to build on.
+Each tile will be a section of the base.
+
+Each tile can be:
     wall
     floor
     nothing
 
-base creator functionality:
+Base creator functionality:
     set tile to something
     set tile to nothing
     expand grid
     shrink grid
 
-future functionality:
+Future functionality:
     zoom
+    scroll/movement(click and drag)
+
 
 */
 
@@ -35,6 +38,14 @@ window.onload = function () {
     var fpstime = 0;
     var framecount = 0;
     var fps = 0;
+
+    var dragPos = {
+        movingArea: 0,
+        startX: 0,
+        startY: 0,
+        endX: 0,
+        endY: 0
+    }
 
     var level = {
         x: 250, // X position
@@ -61,6 +72,10 @@ window.onload = function () {
         canvas.addEventListener("mouseup", onMouseUp);
         canvas.addEventListener("mouseout", onMouseOut);
 
+        canvas.addEventListener("dblclick", function dbleCLick() {
+           alert("Double Click detected.");
+        });
+
         //initialise the two-dimensional tile array
         for (var i=0; i<level.columns; i++) {
             level.tiles[i] = [];
@@ -69,6 +84,10 @@ window.onload = function () {
                 level.tiles[i][j] = {type: 0};
             }
         }
+
+        var canvasTopLeft = canvasCenterWidth();
+        level.x = canvasTopLeft.x;
+        level.y = canvasTopLeft.y;
 
         //Enter main loop
         main(0);
@@ -110,11 +129,17 @@ window.onload = function () {
 
     function render() {
         drawFrame();
+        //setLevelPos();
         drawTiles();
         drawGrid();
     }
 
+    function setLevelPos() {
+        
+    }
+
     function drawTiles() {
+        var canvasTopLeft = canvasCenterWidth();
         for (var i=0; i<level.columns; i++) {
             for (var j=0; j<level.rows; j++) {
                 //get the tile from level.tiles.
@@ -128,14 +153,16 @@ window.onload = function () {
     }
 
     function drawGrid() {
-        /*context.fillStyle = "#ffffff";
+        /*
+        This is to make draw a line around the outside of the grid
+        context.fillStyle = "#ffffff";
         context.strokeRect( level.x, level.y, level.x + (level.columns * level.tileWidth), level.y + (level.rows * level.tileHeight));*/
-
+        var canvasTopLeft = canvasCenterWidth();
         // Columns are X
         for (var i=0; i<level.columns; i++) {
             context.fillStyle = "#ffffff";
             context.strokeRect( 
-                level.x + (i * level.tileWidth), 
+                level.x + (i * level.tileWidth),
                 level.y, 
                 level.tileWidth, 
                 level.rows * level.tileHeight
@@ -180,13 +207,35 @@ window.onload = function () {
     //Mouse event handlers
     function onMouseMove(e) {
         var mousePos = getMousePos(canvas, e);
-        //console.log(mousePos.x, mousePos.y);
-        getTileCoords(mousePos.x, mousePos.y);
+        //getTileCoords(mousePos.x, mousePos.y);
+        if (dragPos.movingArea === 1) {
+            dragPos.movingArea++;
+        }
     }
-    function onMouseDown(e) {}
+
+    function onMouseDown(e) {
+        dragPos.movingArea = 1;
+        var mousePos = getMousePos(canvas, e);
+        dragPos.startX = mousePos.x;
+        dragPos.startY = mousePos.y;
+    }
+
     function onMouseUp(e) {
         var mousePos = getMousePos(canvas, e);
+        if (dragPos.movingArea === 2) {
+            dragPos.endX = mousePos.x;
+            dragPos.endY = mousePos.y;
+            dragPos.movingArea = 0;
+            level.x = level.x - (dragPos.startX - dragPos.endX);
+            level.y = level.y - (dragPos.startY - dragPos.endY);
+            return;
+        }
+
+
         var tileCoords = getTileCoords(mousePos.x, mousePos.y);
+        if (tileCoords == null) {
+            return;
+        }
         var currentTileType = level.tiles[tileCoords.x][tileCoords.y].type;
         var newTileType = (currentTileType + 1) % 3;
 
@@ -194,6 +243,11 @@ window.onload = function () {
         updateTileType(tileCoords.x, tileCoords.y, newTileType);
     }
     function onMouseOut(e) {}
+
+    function getTileType(X, tileY) {
+
+    }
+
 
     // Get Mouse position
     function getMousePos(canvas, e) {
@@ -213,13 +267,22 @@ window.onload = function () {
             if (y >= y1 && y <= y2) {
                 var currentTileX = Math.floor((x - level.x) / level.tileWidth);
                 var currentTileY = Math.floor((y - level.y) / level.tileHeight);
+                //Handle when the user clicks on the perimeter line of the grid
+                // mainly on the right and bottom.
+                if (currentTileX >= level.columns) {
+                    currentTileX--;
+                }
+                if (currentTileY >= level.rows) {
+                    currentTileY--;
+                }
+
                 return {
                     x: currentTileX,
                     y: currentTileY
                 };
             }
         }
-
+        return null; // When the click is outside the grid
     }
 
     function updateTileType(columnTile, columnRow, newType) {
@@ -241,10 +304,6 @@ window.onload = function () {
         }
         level.rows++;
         level.rows++;
-
-        //Done everything 
-        alert("Done expanding");
-        console.log(level.tiles);
     }
 
     function createNewTile() {
@@ -272,9 +331,17 @@ window.onload = function () {
         }
         level.rows--;
         level.rows--;
+    }
 
-        alert("Done Shrinking");
-        console.log(level.tiles);
+    function canvasCenterWidth() {
+        var centerW = canvas.width / 2;
+        var centerH = canvas.height /2;
+        var halfColumns = level.columns / 2;
+        var halfRows = level.rows / 2;
+        // from the center, go half number of tiles to each side.
+        var topLeftX = centerW - (halfColumns * level.tileWidth);
+        var topLeftY = centerH - (halfRows * level.tileHeight);
+        return { x: topLeftX, y: topLeftY};
     }
 
     // call init to start the game
