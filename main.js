@@ -72,6 +72,10 @@ window.onload = function () {
         canvas.addEventListener("mouseup", onMouseUp);
         canvas.addEventListener("mouseout", onMouseOut);
 
+        canvas.addEventListener("dblclick", function dbleCLick() {
+           alert("Double Click detected.");
+        });
+
         //initialise the two-dimensional tile array
         for (var i=0; i<level.columns; i++) {
             level.tiles[i] = [];
@@ -300,10 +304,6 @@ window.onload = function () {
         }
         level.rows++;
         level.rows++;
-
-        //Done everything 
-        alert("Done expanding");
-        console.log(level.tiles);
     }
 
     function createNewTile() {
@@ -331,9 +331,6 @@ window.onload = function () {
         }
         level.rows--;
         level.rows--;
-
-        alert("Done Shrinking");
-        console.log(level.tiles);
     }
 
     function canvasCenterWidth() {
