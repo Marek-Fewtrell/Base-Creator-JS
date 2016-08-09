@@ -12,7 +12,24 @@
 
        </header>
        <section id="gameArea">
-           <div id="gameSelector">
+           <div id="gameOptionMenu">
+               <div>
+                   <!--Center area-->
+                   <button id="centerButt">Center Area</button>
+
+                   <!--Drag/Move area
+                   Change Tiles-->
+                   <button id="dragButt" class="selectedButt">Drag</button>
+                   <button id="changeTileButt">Change Tile</button>
+
+                   <!--Tile Type Select-->
+                   <select id="tileTypeSelect">
+                       <option value="0">Nothing</option>
+                       <option value="1">Wall</option>
+                       <option value="2">Door</option>
+                   </select>
+                   
+               </div>
                <button id="expandButt">Expand Grid</button>
                <button id="shrinkButt">Shrink Grid</button>
            </div>

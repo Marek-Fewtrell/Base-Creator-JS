@@ -8,17 +8,17 @@
 
 header {
     text-align: center;
-    background-color: blue;
+    background-color: lightblue;
 }
 
 section {
     width: 100%;
-    background-color: yellow;
+    background-color: lightgrey;
 }
 
 footer {
     text-align: center;
-    background-color: blue;
+    background-color: lightblue;
 }
 
 /*
@@ -30,13 +30,17 @@ canvas {
     display: block;
 }
 
-#gameSelector {
+#gameOptionMenu {
     text-align: center;
 }
 
-#gameSelector button {
+#gameOptionMenu button {
     padding: .5em;
     margin: .5em;
     background-color: white;
     border-color: black;
+}
+
+.selectedButt {
+    box-shadow: 0 0 10px green;
 }
