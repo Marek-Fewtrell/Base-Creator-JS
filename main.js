@@ -16,19 +16,20 @@ Base creator functionality:
 
 Future functionality:
     zoom
-    scroll/movement(click and drag)
+    Options menu
 
 
 */
-
-//console.log("Starting main.js file");
 
 window.onload = function () {
 
     document.getElementById("expandButt").addEventListener("click", expandGrid);
     document.getElementById("shrinkButt").addEventListener("click", shrinkGrid);
+    document.getElementById("centerButt").addEventListener("click", centerViewArea);
+    document.getElementById("dragButt").addEventListener("click", dragAction);
+    document.getElementById("changeTileButt").addEventListener("click", changeTileAction);
 
-    //document.getElementById("gameSelector").innerHTML = "Loading...";
+
     //get canvas and context
     var canvas = document.getElementById("gameCanvas");
     var context = canvas.getContext("2d");
@@ -46,6 +47,18 @@ window.onload = function () {
         endX: 0,
         endY: 0
     }
+
+    var mouseAction = "Drag";
+    /*
+    This is used for an options menu in the canvas.
+    var optionMenu = {
+        buttonPos: {
+            x: 795,
+            y: 23,
+            height: 23,
+            width: 80
+        }
+    };*/
 
     var level = {
         x: 250, // X position
@@ -72,10 +85,6 @@ window.onload = function () {
         canvas.addEventListener("mouseup", onMouseUp);
         canvas.addEventListener("mouseout", onMouseOut);
 
-        canvas.addEventListener("dblclick", function dbleCLick() {
-           alert("Double Click detected.");
-        });
-
         //initialise the two-dimensional tile array
         for (var i=0; i<level.columns; i++) {
             level.tiles[i] = [];
@@ -85,9 +94,7 @@ window.onload = function () {
             }
         }
 
-        var canvasTopLeft = canvasCenterWidth();
-        level.x = canvasTopLeft.x;
-        level.y = canvasTopLeft.y;
+        centerGridOnCanvas();
 
         //Enter main loop
         main(0);
@@ -202,14 +209,26 @@ window.onload = function () {
         context.fillStyle = "#ffffff";
         context.font = "12px Verdana";
         context.fillText("FPS: " + fps, 13, 50);
+
+        /*
+        This is used for an options menu in the canvas.
+        //Draw options button
+        context.fillStyle = "#ffffff";
+        context.fillRect(optionMenu.buttonPos.x, optionMenu.buttonPos.y, optionMenu.buttonPos.width, optionMenu.buttonPos.height);
+        context.fillStyle = "#000000 ";
+        context.font = "18px Verdana";
+        context.fillText("Options", 800, 40);*/
     }
 
     //Mouse event handlers
     function onMouseMove(e) {
         var mousePos = getMousePos(canvas, e);
-        //getTileCoords(mousePos.x, mousePos.y);
-        if (dragPos.movingArea === 1) {
-            dragPos.movingArea++;
+        
+        if (mouseAction === "Drag") {
+            //getTileCoords(mousePos.x, mousePos.y);
+            if (dragPos.movingArea === 1) {
+                dragPos.movingArea++;
+            }
         }
     }
 
@@ -222,25 +241,39 @@ window.onload = function () {
 
     function onMouseUp(e) {
         var mousePos = getMousePos(canvas, e);
-        if (dragPos.movingArea === 2) {
-            dragPos.endX = mousePos.x;
-            dragPos.endY = mousePos.y;
-            dragPos.movingArea = 0;
-            level.x = level.x - (dragPos.startX - dragPos.endX);
-            level.y = level.y - (dragPos.startY - dragPos.endY);
-            return;
+        if (mouseAction === "Drag") {
+            if (dragPos.movingArea === 2) {
+                dragPos.endX = mousePos.x;
+                dragPos.endY = mousePos.y;
+                dragPos.movingArea = 0;
+                level.x = level.x - (dragPos.startX - dragPos.endX);
+                level.y = level.y - (dragPos.startY - dragPos.endY);
+                return;
+            }
         }
 
+        if (mouseAction === "Change") {
+            var tileCoords = getTileCoords(mousePos.x, mousePos.y);
+            if (tileCoords == null) {
+                //This is for an options menu in canvas.
+                //handleMenuInteraction(mousePos.x, mousePos.y);
+                return;
+            }
 
-        var tileCoords = getTileCoords(mousePos.x, mousePos.y);
-        if (tileCoords == null) {
-            return;
+            var originalTileCoords = getTileCoords(dragPos.startX, dragPos.startY);
+            if (tileCoords.x != originalTileCoords.x || tileCoords.y != originalTileCoords.y) {
+                return;
+            }
+
+            var currentTileType = level.tiles[tileCoords.x][tileCoords.y].type;
+            //var newTileType = (currentTileType + 1) % 3;
+            var selectedTileType = document.getElementById("tileTypeSelect");
+            
+            var newTileType = selectedTileType.options[selectedTileType.selectedIndex].value; 
+
+            //level.tiles[tileCoords.x][tileCoords.y].type = newTileType;
+            updateTileType(tileCoords.x, tileCoords.y, newTileType);
         }
-        var currentTileType = level.tiles[tileCoords.x][tileCoords.y].type;
-        var newTileType = (currentTileType + 1) % 3;
-
-        //level.tiles[tileCoords.x][tileCoords.y].type = newTileType;
-        updateTileType(tileCoords.x, tileCoords.y, newTileType);
     }
     function onMouseOut(e) {}
 
@@ -248,6 +281,19 @@ window.onload = function () {
 
     }
 
+    /*
+    This is for an options menu in canvas.
+    function handleMenuInteraction(x, y) {
+        var x1 = optionMenu.buttonPos.x;
+        var x2 = optionMenu.buttonPos.x + optionMenu.buttonPos.width;
+        var y1 = optionMenu.buttonPos.y;
+        var y2 = optionMenu.buttonPos.y + optionMenu.buttonPos.height;
+        if (x >= x1 && x <= x2) {
+            if (y >= y1 && y <= y2) {
+                console.log("Option button pressed.");
+            }
+        }
+    }*/
 
     // Get Mouse position
     function getMousePos(canvas, e) {
@@ -342,6 +388,26 @@ window.onload = function () {
         var topLeftX = centerW - (halfColumns * level.tileWidth);
         var topLeftY = centerH - (halfRows * level.tileHeight);
         return { x: topLeftX, y: topLeftY};
+    }
+
+    function centerViewArea() {
+        centerGridOnCanvas();
+    }
+    function dragAction() {
+        mouseAction = "Drag";
+        document.getElementById("dragButt").classList.add("selectedButt");
+        document.getElementById("changeTileButt").classList.remove("selectedButt");
+    }
+    function changeTileAction() {
+        mouseAction = "Change";
+        document.getElementById("dragButt").classList.remove("selectedButt");
+        document.getElementById("changeTileButt").classList.add("selectedButt");
+    }
+    
+    function centerGridOnCanvas() {
+        var canvasTopLeft = canvasCenterWidth();
+        level.x = canvasTopLeft.x;
+        level.y = canvasTopLeft.y;
     }
 
     // call init to start the game
