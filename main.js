@@ -28,6 +28,7 @@ window.onload = function () {
     document.getElementById("centerButt").addEventListener("click", centerViewArea);
     document.getElementById("dragButt").addEventListener("click", dragAction);
     document.getElementById("changeTileButt").addEventListener("click", changeTileAction);
+    document.getElementById("zoomAreaSelect").addEventListener("change", zoomGrid);
 
 
     //get canvas and context
@@ -67,6 +68,7 @@ window.onload = function () {
         rows: 8, // number of tile rows
         tileWidth: 40, // visual width of a tile
         tileHeight: 40, // visual height of a tile
+        zoomLevel: 1,
         tiles: [] // two-dimensional tile array
         //selectedTile: {selected: false, column: 0, row: 0 }
     };
@@ -151,12 +153,17 @@ window.onload = function () {
             for (var j=0; j<level.rows; j++) {
                 //get the tile from level.tiles.
                 var tile = level.tiles[i][j];
-                var xPos = level.x + (level.tileWidth * i);
-                var yPos = level.y + (level.tileHeight * j);
+                var xPos = level.x + (getTileDimension(level.tileWidth, level.zoomLevel) * i);
+                var yPos = level.y + (getTileDimension(level.tileHeight, level.zoomLevel) * j);
+
                 context.fillStyle = tileColours[tile.type];
-                context.fillRect(xPos, yPos, level.tileWidth, level.tileHeight);
+                context.fillRect(xPos, yPos, getTileDimension(level.tileWidth, level.zoomLevel), getTileDimension(level.tileHeight, level.zoomLevel));
             }
         }
+    }
+
+    function getTileDimension(tileDimension, zoomLevel) {
+        return tileDimension * zoomLevel;
     }
 
     function drawGrid() {
@@ -169,10 +176,10 @@ window.onload = function () {
         for (var i=0; i<level.columns; i++) {
             context.fillStyle = "#ffffff";
             context.strokeRect( 
-                level.x + (i * level.tileWidth),
+                level.x + (i * getTileDimension(level.tileWidth, level.zoomLevel)),
                 level.y, 
-                level.tileWidth, 
-                level.rows * level.tileHeight
+                getTileDimension(level.tileWidth, level.zoomLevel), 
+                level.rows * getTileDimension(level.tileHeight, level.zoomLevel)
             );
         }
 
@@ -181,9 +188,9 @@ window.onload = function () {
             context.fillStyle = "#ffffff";
             context.strokeRect( 
                 level.x, 
-                level.y + (j * level.tileHeight), 
-                level.columns * level.tileWidth,
-                level.tileHeight
+                level.y + (j * getTileDimension(level.tileHeight, level.zoomLevel)), 
+                level.columns * getTileDimension(level.tileWidth, level.zoomLevel),
+                getTileDimension(level.tileHeight, level.zoomLevel)
             );
         }
         
@@ -306,13 +313,13 @@ window.onload = function () {
 
     function getTileCoords(x, y) {
         var x1 = level.x;
-        var x2 = level.x + (level.columns * level.tileWidth);
+        var x2 = level.x + (level.columns * getTileDimension(level.tileWidth, level.zoomLevel));
         var y1 = level.y;
-        var y2 = level.y + (level.rows * level.tileHeight);
+        var y2 = level.y + (level.rows * getTileDimension(level.tileWidth, level.zoomLevel));
         if (x >= x1 && x <= x2) {
             if (y >= y1 && y <= y2) {
-                var currentTileX = Math.floor((x - level.x) / level.tileWidth);
-                var currentTileY = Math.floor((y - level.y) / level.tileHeight);
+                var currentTileX = Math.floor((x - level.x) / getTileDimension(level.tileWidth, level.zoomLevel));
+                var currentTileY = Math.floor((y - level.y) / getTileDimension(level.tileHeight, level.zoomLevel));
                 //Handle when the user clicks on the perimeter line of the grid
                 // mainly on the right and bottom.
                 if (currentTileX >= level.columns) {
@@ -385,9 +392,30 @@ window.onload = function () {
         var halfColumns = level.columns / 2;
         var halfRows = level.rows / 2;
         // from the center, go half number of tiles to each side.
-        var topLeftX = centerW - (halfColumns * level.tileWidth);
-        var topLeftY = centerH - (halfRows * level.tileHeight);
+        var topLeftX = centerW - (halfColumns * getTileDimension(level.tileWidth, level.zoomLevel));
+        var topLeftY = centerH - (halfRows * getTileDimension(level.tileHeight, level.zoomLevel));
         return { x: topLeftX, y: topLeftY};
+    }
+
+    function zoomGrid() {
+        //get new size of the grid
+        var selectedNum = this.selectedIndex;
+        var newSize = this.options[selectedNum].value;
+        var zoomLevel = 1;
+        //apply size to grid
+        switch(newSize) {
+            case "50":
+                zoomLevel = 0.5;
+                break;
+            case "100":
+                zoomLevel = 1;
+                break;
+            case "150":
+                zoomLevel = 1.5;
+                break;
+        }
+        level.zoomLevel = zoomLevel;
+        //profit
     }
 
     function centerViewArea() {

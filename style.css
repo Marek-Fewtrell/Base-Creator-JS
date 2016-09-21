@@ -44,3 +44,11 @@ canvas {
 .selectedButt {
     box-shadow: 0 0 10px green;
 }
+
+.menuBordered {
+    border: 1px solid green;
+    width: auto;
+    margin: 5px;
+    display: inline-block;
+    padding: 5px;
+}
