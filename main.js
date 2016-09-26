@@ -42,11 +42,11 @@ window.onload = function () {
     var fps = 0;
 
     var dragPos = {
-        movingArea: 0,
-        startX: 0,
-        startY: 0,
-        endX: 0,
-        endY: 0
+        movingArea: 0, // Keeps the state of the current operation. i.e. not moving, moving
+        startX: 0, // Start X position mouse down
+        startY: 0, // Start Y position mouse down
+        endX: 0, // End X position mouse up
+        endY: 0 // End Y position mouse up
     }
 
     var mouseAction = "Drag";
@@ -70,7 +70,6 @@ window.onload = function () {
         tileHeight: 40, // visual height of a tile
         zoomLevel: 1,
         tiles: [] // two-dimensional tile array
-        //selectedTile: {selected: false, column: 0, row: 0 }
     };
 
     var tileColours = [
@@ -232,10 +231,19 @@ window.onload = function () {
         var mousePos = getMousePos(canvas, e);
         
         if (mouseAction === "Drag") {
-            //getTileCoords(mousePos.x, mousePos.y);
             if (dragPos.movingArea === 1) {
-                dragPos.movingArea++;
+                dragPos.endX = mousePos.x;
+                dragPos.endY = mousePos.y;
+                level.x = level.x - (dragPos.startX - dragPos.endX);
+                level.y = level.y - (dragPos.startY - dragPos.endY);
+
+                dragPos.startX = mousePos.x;
+                dragPos.startY = mousePos.y;
+                return;
             }
+        }
+        if (dragPos.movingArea === 1) {
+            changeTile(mousePos);
         }
     }
 
@@ -249,40 +257,41 @@ window.onload = function () {
     function onMouseUp(e) {
         var mousePos = getMousePos(canvas, e);
         if (mouseAction === "Drag") {
-            if (dragPos.movingArea === 2) {
-                dragPos.endX = mousePos.x;
-                dragPos.endY = mousePos.y;
-                dragPos.movingArea = 0;
-                level.x = level.x - (dragPos.startX - dragPos.endX);
-                level.y = level.y - (dragPos.startY - dragPos.endY);
-                return;
+            if (dragPos.movingArea === 1) {
+                //dragPos.movingArea = 0;
             }
         }
 
         if (mouseAction === "Change") {
-            var tileCoords = getTileCoords(mousePos.x, mousePos.y);
-            if (tileCoords == null) {
-                //This is for an options menu in canvas.
-                //handleMenuInteraction(mousePos.x, mousePos.y);
-                return;
-            }
-
-            var originalTileCoords = getTileCoords(dragPos.startX, dragPos.startY);
-            if (tileCoords.x != originalTileCoords.x || tileCoords.y != originalTileCoords.y) {
-                return;
-            }
-
-            var currentTileType = level.tiles[tileCoords.x][tileCoords.y].type;
-            //var newTileType = (currentTileType + 1) % 3;
-            var selectedTileType = document.getElementById("tileTypeSelect");
-            
-            var newTileType = selectedTileType.options[selectedTileType.selectedIndex].value; 
-
-            //level.tiles[tileCoords.x][tileCoords.y].type = newTileType;
-            updateTileType(tileCoords.x, tileCoords.y, newTileType);
+            changeTile(mousePos);
         }
+
+        dragPos.movingArea = 0;
     }
     function onMouseOut(e) {}
+
+    function changeTile(mousePos) {
+        var tileCoords = getTileCoords(mousePos.x, mousePos.y);
+        if (tileCoords == null) {
+            //This is for an options menu in canvas.
+            //handleMenuInteraction(mousePos.x, mousePos.y);
+            return;
+        }
+
+        var originalTileCoords = getTileCoords(dragPos.startX, dragPos.startY);
+        if (tileCoords.x != originalTileCoords.x || tileCoords.y != originalTileCoords.y) {
+            //return;
+        }
+
+        var currentTileType = level.tiles[tileCoords.x][tileCoords.y].type;
+        //var newTileType = (currentTileType + 1) % 3;
+        var selectedTileType = document.getElementById("tileTypeSelect");
+        
+        var newTileType = selectedTileType.options[selectedTileType.selectedIndex].value; 
+
+        //level.tiles[tileCoords.x][tileCoords.y].type = newTileType;
+        updateTileType(tileCoords.x, tileCoords.y, newTileType);
+    }
 
     function getTileType(X, tileY) {
 
@@ -372,18 +381,20 @@ window.onload = function () {
     }
 
     function shrinkGrid() {
-        // Remove columns at either ends
-        level.tiles.pop();
-        level.columns--;
-        level.tiles.shift();
-        level.columns--;
-        // Remove one tile from each row
-        for (var i=0; i<level.columns; i++) {
-            level.tiles[i].shift();
-            level.tiles[i].pop();
+        if (level.columns > 2 && level.rows > 2) {
+            // Remove columns at either ends
+            level.tiles.pop();
+            level.columns--;
+            level.tiles.shift();
+            level.columns--;
+            // Remove one tile from each row
+            for (var i=0; i<level.columns; i++) {
+                level.tiles[i].shift();
+                level.tiles[i].pop();
+            }
+            level.rows--;
+            level.rows--;
         }
-        level.rows--;
-        level.rows--;
     }
 
     function canvasCenterWidth() {
