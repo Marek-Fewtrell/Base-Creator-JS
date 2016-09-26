@@ -265,7 +265,7 @@ window.onload = function () {
         if (mouseAction === "Change") {
             changeTile(mousePos);
         }
-        
+
         dragPos.movingArea = 0;
     }
     function onMouseOut(e) {}
@@ -381,18 +381,20 @@ window.onload = function () {
     }
 
     function shrinkGrid() {
-        // Remove columns at either ends
-        level.tiles.pop();
-        level.columns--;
-        level.tiles.shift();
-        level.columns--;
-        // Remove one tile from each row
-        for (var i=0; i<level.columns; i++) {
-            level.tiles[i].shift();
-            level.tiles[i].pop();
+        if (level.columns > 2 && level.rows > 2) {
+            // Remove columns at either ends
+            level.tiles.pop();
+            level.columns--;
+            level.tiles.shift();
+            level.columns--;
+            // Remove one tile from each row
+            for (var i=0; i<level.columns; i++) {
+                level.tiles[i].shift();
+                level.tiles[i].pop();
+            }
+            level.rows--;
+            level.rows--;
         }
-        level.rows--;
-        level.rows--;
     }
 
     function canvasCenterWidth() {
